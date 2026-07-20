@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+python-dotenv
+python-multipart
+
+numpy
+pandas
+scikit-learn
+
+opencv-python
+pillow
+
+pytest
