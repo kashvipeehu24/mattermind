@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
 
-
 class MaterialCreate(BaseModel):
     material_name: str
     material_type: str
