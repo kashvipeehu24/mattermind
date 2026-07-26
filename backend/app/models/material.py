@@ -72,8 +72,8 @@ class Material(Base):
         cascade="all, delete-orphan",
     )
 
-    analyses = relationship(
-        "Analysis",
-        back_populates="material",
-        cascade="all, delete-orphan",
-    )
+    #analyses = relationship(
+    #    "Analysis",
+    #   back_populates="material",
+    #   cascade="all, delete-orphan",
+    #)

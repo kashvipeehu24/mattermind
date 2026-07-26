@@ -42,7 +42,7 @@ class Analysis(Base):
         nullable=False,
     )
 
-    material = relationship(
-        "Material",
-        back_populates="analyses",
-    )
+    #material = relationship(
+    #   "Material",
+    #    back_populates="analyses",
+    #)
