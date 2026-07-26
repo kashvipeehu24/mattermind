@@ -9,6 +9,10 @@ import pytest
 TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "mattermind_test.db")
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
 
+# The auth rate limiter keeps counters in process memory, so a realistic limit
+# would leak between tests. `RateLimiter` itself is covered in test_security.py.
+os.environ.setdefault("AUTH_RATE_LIMIT_REQUESTS", "10000")
+
 
 @pytest.fixture(scope="session", autouse=True)
 def remove_test_database():

@@ -30,6 +30,7 @@ def test_dashboard_summary():
             "/auth/login",
             json={"email": "admin@example.com", "password": "adminpassword"},
         ).json()["access_token"]
+        client.headers.update({"Authorization": f"Bearer {admin_token}"})
 
         # Create materials
         client.post(

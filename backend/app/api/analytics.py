@@ -11,8 +11,13 @@ from backend.app.schemas.analytics import (
     SustainabilityAnalyticsResponse,
 )
 from backend.app.services.analytics_service import AnalyticsService
+from backend.app.api.deps import get_current_active_user
 
-router = APIRouter(prefix="/analytics", tags=["Analytics"])
+router = APIRouter(
+    prefix="/analytics",
+    tags=["Analytics"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.get("/materials", response_model=MaterialAnalyticsResponse)

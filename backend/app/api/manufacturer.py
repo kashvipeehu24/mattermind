@@ -9,8 +9,14 @@ from backend.app.schemas.manufacturer import (
     ManufacturerResponse,
 )
 from backend.app.services.manufacturer_service import ManufacturerService
+from backend.app.api.deps import get_current_active_user, get_current_admin_user
+from backend.app.models.user import User
 
-router = APIRouter(prefix="/manufacturers", tags=["Manufacturers"])
+router = APIRouter(
+    prefix="/manufacturers",
+    tags=["Manufacturers"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.get("/", response_model=List[ManufacturerResponse])
@@ -31,7 +37,9 @@ def read_manufacturers(
     "/", response_model=ManufacturerResponse, status_code=status.HTTP_201_CREATED
 )
 def create_manufacturer(
-    manufacturer_in: ManufacturerCreate, db: Session = Depends(get_db)
+    manufacturer_in: ManufacturerCreate,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
 ) -> Any:
     return ManufacturerService.create_manufacturer(db, manufacturer_in)
 
@@ -51,6 +59,7 @@ def update_manufacturer(
     manufacturer_id: int,
     manufacturer_in: ManufacturerUpdate,
     db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
 ) -> Any:
     db_mfg = ManufacturerService.get_manufacturer(db, manufacturer_id)
     if not db_mfg:
@@ -61,7 +70,11 @@ def update_manufacturer(
 
 
 @router.delete("/{manufacturer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_manufacturer(manufacturer_id: int, db: Session = Depends(get_db)):
+def delete_manufacturer(
+    manufacturer_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
     db_mfg = ManufacturerService.get_manufacturer(db, manufacturer_id)
     if not db_mfg:
         raise HTTPException(

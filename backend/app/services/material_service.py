@@ -44,7 +44,7 @@ class MaterialService:
 
     @staticmethod
     def create_material(
-        db: Session, material_in: MaterialCreate, current_user_id: Optional[int] = None
+        db: Session, material_in: MaterialCreate, current_user_id: int
     ) -> Material:
         db_material = Material(**material_in.model_dump())
         db.add(db_material)
@@ -68,7 +68,7 @@ class MaterialService:
         db: Session,
         db_material: Material,
         material_in: MaterialUpdate,
-        current_user_id: Optional[int] = None,
+        current_user_id: int,
     ) -> Material:
         update_data = material_in.model_dump(exclude_unset=True)
         changes = []

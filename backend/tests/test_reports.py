@@ -13,8 +13,27 @@ def setup_database():
     Base.metadata.drop_all(bind=engine)
 
 
+def authenticate_as_admin(client):
+    client.post(
+        "/auth/register",
+        json={
+            "email": "admin@example.com",
+            "password": "adminpassword",
+            "full_name": "Admin User",
+            "role": "admin",
+        },
+    )
+    token = client.post(
+        "/auth/login",
+        json={"email": "admin@example.com", "password": "adminpassword"},
+    ).json()["access_token"]
+    client.headers.update({"Authorization": f"Bearer {token}"})
+
+
 def test_report_generation():
     with TestClient(app) as client:
+        authenticate_as_admin(client)
+
         # Create materials
         client.post(
             "/materials/",

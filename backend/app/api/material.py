@@ -13,15 +13,23 @@ from backend.app.schemas.material_history import (
     MaterialPassportResponse,
 )
 from backend.app.services.material_service import MaterialService
+from backend.app.api.deps import get_current_active_user, get_current_admin_user
+from backend.app.models.user import User
 
-router = APIRouter(prefix="/materials", tags=["Materials"])
+router = APIRouter(
+    prefix="/materials",
+    tags=["Materials"],
+    dependencies=[Depends(get_current_active_user)],
+)
 
 
 @router.post("/", response_model=MaterialResponse, status_code=status.HTTP_201_CREATED)
 def create_material(
-    material_in: MaterialCreate, db: Session = Depends(get_db)
+    material_in: MaterialCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
-    return MaterialService.create_material(db, material_in)
+    return MaterialService.create_material(db, material_in, current_user.id)
 
 
 @router.get("/", response_model=List[MaterialResponse])
@@ -101,17 +109,24 @@ def update_material(
     material_id: int,
     material_in: MaterialUpdate,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
 ):
     db_material = MaterialService.get_material(db, material_id)
     if not db_material:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Material not found"
         )
-    return MaterialService.update_material(db, db_material, material_in)
+    return MaterialService.update_material(
+        db, db_material, material_in, current_user.id
+    )
 
 
 @router.delete("/{material_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_material(material_id: int, db: Session = Depends(get_db)):
+def delete_material(
+    material_id: int,
+    db: Session = Depends(get_db),
+    admin_user: User = Depends(get_current_admin_user),
+):
     db_material = MaterialService.get_material(db, material_id)
     if not db_material:
         raise HTTPException(

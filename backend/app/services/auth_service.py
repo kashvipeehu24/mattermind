@@ -30,11 +30,15 @@ class AuthService:
                 detail="Email is already registered",
             )
         hashed_password = get_password_hash(user_in.password)
+        # Only the very first account may self-assign a privileged role (initial
+        # bootstrap). Later roles are granted through the admin-only /users API.
+        is_first_user = db.query(User).count() == 0
+        role = (user_in.role or "user") if is_first_user else "user"
         db_user = User(
             email=user_in.email.lower(),
             hashed_password=hashed_password,
             full_name=user_in.full_name,
-            role=user_in.role or "user",
+            role=role,
             is_active=user_in.is_active if user_in.is_active is not None else True,
         )
         db.add(db_user)

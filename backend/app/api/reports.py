@@ -4,8 +4,13 @@ from sqlalchemy.orm import Session
 
 from backend.app.core.database import get_db
 from backend.app.services.report_service import ReportService
+from backend.app.api.deps import get_current_admin_user
 
-router = APIRouter(prefix="/reports", tags=["Reports"])
+router = APIRouter(
+    prefix="/reports",
+    tags=["Reports"],
+    dependencies=[Depends(get_current_admin_user)],
+)
 
 
 @router.get("/materials")
