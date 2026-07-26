@@ -6,6 +6,7 @@ from backend.app.core.logging import setup_logging
 import backend.app.models  # Ensure all SQLAlchemy models are registered
 
 from backend.app.api.material import router as material_router
+from backend.app.api.manufacturer import router as manufacturer_router
 from backend.app.api.auth import router as auth_router
 from backend.app.api.user import router as user_router
 from backend.app.api.dashboard import router as dashboard_router
@@ -32,6 +33,7 @@ app.add_middleware(
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(material_router)
+app.include_router(manufacturer_router)
 app.include_router(dashboard_router)
 app.include_router(analytics_router)
 app.include_router(reports_router)

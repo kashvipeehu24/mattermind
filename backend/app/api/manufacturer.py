@@ -61,7 +61,7 @@ def update_manufacturer(
 
 
 @router.delete("/{manufacturer_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_manufacturer(manufacturer_id: int, db: Session = Depends(get_db)) -> Any:
+def delete_manufacturer(manufacturer_id: int, db: Session = Depends(get_db)):
     db_mfg = ManufacturerService.get_manufacturer(db, manufacturer_id)
     if not db_mfg:
         raise HTTPException(
