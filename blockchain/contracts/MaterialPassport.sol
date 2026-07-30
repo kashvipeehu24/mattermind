@@ -1,9 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract MaterialPassport is Ownable {
+contract MaterialPassport is AccessControl {
+
+    bytes32 public constant MANUFACTURER_ROLE =
+    keccak256("MANUFACTURER_ROLE");
+
+    bytes32 public constant INSPECTOR_ROLE =
+    keccak256("INSPECTOR_ROLE");
+
+    bytes32 public constant WAREHOUSE_ROLE =
+    keccak256("WAREHOUSE_ROLE");
+
+    bytes32 public constant RECYCLER_ROLE =
+    keccak256("RECYCLER_ROLE");
 
     struct Material {
         string materialId;
@@ -43,7 +55,14 @@ contract MaterialPassport is Ownable {
     address indexed newOwner
     );
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address admin) {
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+
+    _grantRole(MANUFACTURER_ROLE, admin);
+    _grantRole(INSPECTOR_ROLE, admin);
+    _grantRole(WAREHOUSE_ROLE, admin);
+    _grantRole(RECYCLER_ROLE, admin);
+    }
 
     function registerMaterial(
         string memory _materialId,
@@ -53,7 +72,7 @@ contract MaterialPassport is Ownable {
         uint256 _manufactureDate,
         string memory _metadataURI,
         address _owner
-    ) public onlyOwner {
+    ) public onlyRole(MANUFACTURER_ROLE) {
 
         require(
             !materials[_materialId].exists,
@@ -78,7 +97,7 @@ contract MaterialPassport is Ownable {
     string memory _materialId,
     string memory _eventType,
     string memory _description
-    ) public onlyOwner {
+    ) public onlyRole(INSPECTOR_ROLE) {
 
     require(
         materials[_materialId].exists,
@@ -104,7 +123,7 @@ contract MaterialPassport is Ownable {
     function transferMaterialOwnership(
     string memory _materialId,
     address _newOwner
-) public onlyOwner {
+    ) public onlyRole(WAREHOUSE_ROLE) {
 
     require(
         materials[_materialId].exists,
