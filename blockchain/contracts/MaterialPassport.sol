@@ -37,6 +37,12 @@ contract MaterialPassport is Ownable {
     address indexed performedBy
     );
 
+    event OwnershipTransferred(
+    string indexed materialId,
+    address indexed previousOwner,
+    address indexed newOwner
+    );
+
     constructor(address initialOwner) Ownable(initialOwner) {}
 
     function registerMaterial(
@@ -92,6 +98,41 @@ contract MaterialPassport is Ownable {
         _materialId,
         _eventType,
         msg.sender
+    );
+    }
+
+    function transferMaterialOwnership(
+    string memory _materialId,
+    address _newOwner
+) public onlyOwner {
+
+    require(
+        materials[_materialId].exists,
+        "Material not found"
+    );
+
+    require(
+        _newOwner != address(0),
+        "Invalid owner address"
+    );
+
+    address previousOwner = materials[_materialId].currentOwner;
+
+    materials[_materialId].currentOwner = _newOwner;
+
+    materialHistory[_materialId].push(
+        LifecycleEvent({
+            timestamp: block.timestamp,
+            eventType: "Ownership Transfer",
+            description: "Material ownership transferred",
+            performedBy: msg.sender
+        })
+    );
+
+    emit OwnershipTransferred(
+        _materialId,
+        previousOwner,
+        _newOwner
     );
     }
 
