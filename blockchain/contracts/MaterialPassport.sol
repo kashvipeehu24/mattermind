@@ -1,9 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract MaterialPassport is Ownable {
+contract MaterialPassport is AccessControl {
+
+    bytes32 public constant MANUFACTURER_ROLE =
+    keccak256("MANUFACTURER_ROLE");
+
+    bytes32 public constant INSPECTOR_ROLE =
+    keccak256("INSPECTOR_ROLE");
+
+    bytes32 public constant WAREHOUSE_ROLE =
+    keccak256("WAREHOUSE_ROLE");
+
+    bytes32 public constant RECYCLER_ROLE =
+    keccak256("RECYCLER_ROLE");
+
+    enum MaterialStatus {
+    Manufactured,
+    InTransit,
+    Installed,
+    UnderMaintenance,
+    Recycled,
+    Disposed
+    }
 
     struct Material {
         string materialId;
@@ -13,6 +34,7 @@ contract MaterialPassport is Ownable {
         address currentOwner;
         uint256 manufactureDate;
         string metadataURI;
+        MaterialStatus status;
         bool exists;
     }
 
@@ -37,7 +59,24 @@ contract MaterialPassport is Ownable {
     address indexed performedBy
     );
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    event OwnershipTransferred(
+    string indexed materialId,
+    address indexed previousOwner,
+    address indexed newOwner
+    );
+
+    event MaterialStatusUpdated(
+    string indexed materialId,
+    MaterialStatus newStatus
+    );
+
+    constructor(address admin) {
+    _grantRole(DEFAULT_ADMIN_ROLE, admin);
+    _grantRole(MANUFACTURER_ROLE, admin);
+    _grantRole(INSPECTOR_ROLE, admin);
+    _grantRole(WAREHOUSE_ROLE, admin);
+    _grantRole(RECYCLER_ROLE, admin);
+    }
 
     function registerMaterial(
         string memory _materialId,
@@ -47,7 +86,7 @@ contract MaterialPassport is Ownable {
         uint256 _manufactureDate,
         string memory _metadataURI,
         address _owner
-    ) public onlyOwner {
+    ) public onlyRole(MANUFACTURER_ROLE) {
 
         require(
             !materials[_materialId].exists,
@@ -62,6 +101,7 @@ contract MaterialPassport is Ownable {
             currentOwner: _owner,
             manufactureDate: _manufactureDate,
             metadataURI: _metadataURI,
+            status: MaterialStatus.Manufactured,
             exists: true
         });
 
@@ -72,7 +112,7 @@ contract MaterialPassport is Ownable {
     string memory _materialId,
     string memory _eventType,
     string memory _description
-    ) public onlyOwner {
+    ) public onlyRole(INSPECTOR_ROLE) {
 
     require(
         materials[_materialId].exists,
@@ -92,6 +132,70 @@ contract MaterialPassport is Ownable {
         _materialId,
         _eventType,
         msg.sender
+    );
+    }
+
+    function transferMaterialOwnership(
+    string memory _materialId,
+    address _newOwner
+    ) public onlyRole(WAREHOUSE_ROLE) {
+
+    require(
+        materials[_materialId].exists,
+        "Material not found"
+    );
+
+    require(
+        _newOwner != address(0),
+        "Invalid owner address"
+    );
+
+    address previousOwner = materials[_materialId].currentOwner;
+
+    materials[_materialId].currentOwner = _newOwner;
+
+    materialHistory[_materialId].push(
+        LifecycleEvent({
+            timestamp: block.timestamp,
+            eventType: "Ownership Transfer",
+            description: "Material ownership transferred",
+            performedBy: msg.sender
+        })
+    );
+
+    emit OwnershipTransferred(
+        _materialId,
+        previousOwner,
+        _newOwner
+    );
+    }
+
+    function updateMaterialStatus(
+    string memory _materialId,
+    MaterialStatus _newStatus
+)
+    public
+    onlyRole(INSPECTOR_ROLE)
+{
+    require(
+        materials[_materialId].exists,
+        "Material not found"
+    );
+
+    materials[_materialId].status = _newStatus;
+
+    materialHistory[_materialId].push(
+        LifecycleEvent({
+            timestamp: block.timestamp,
+            eventType: "Status Update",
+            description: "Material status updated",
+            performedBy: msg.sender
+        })
+    );
+
+    emit MaterialStatusUpdated(
+        _materialId,
+        _newStatus
     );
     }
 

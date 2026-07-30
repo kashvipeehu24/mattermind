@@ -1,57 +1,105 @@
-# Sample Hardhat 3 Project (`mocha` and `ethers`)
+# MatterMind Blockchain Module
 
-This project showcases a Hardhat 3 project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+## Overview
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+The Blockchain module of MatterMind provides a secure and immutable Material Passport system using Ethereum smart contracts. Every material receives a unique digital identity, enabling transparent ownership tracking, lifecycle management, and verification throughout its lifecycle.
 
-## Project Overview
+---
 
-This example project includes:
+## Tech Stack
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+- Solidity ^0.8.28
+- Hardhat
+- OpenZeppelin Contracts
+- Ethers.js
+- TypeScript
 
-## Usage
+---
 
-### Running Tests
+## Features
 
-To run all the tests in the project, execute the following command:
+- Material Registration
+- Material Verification
+- Material Information Retrieval
+- Lifecycle Event Tracking
+- Material Ownership Transfer
+- Material Status Management
+- Role-Based Access Control (RBAC)
 
-```shell
-npx hardhat test
+---
+
+## Project Structure
+
+```
+blockchain/
+├── contracts/
+│   └── MaterialPassport.sol
+├── scripts/
+│   └── deploy.ts
+├── artifacts/
+├── cache/
+├── hardhat.config.ts
+├── package.json
+└── tsconfig.json
 ```
 
-You can also selectively run the Solidity or `mocha` tests:
+---
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
+## Installation
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-### Make a deployment to Sepolia
+---
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+## Compile Smart Contracts
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+```bash
+npx hardhat compile
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+---
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
+## Deploy Contract
 
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
+Deploy to the local Hardhat network:
 
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+```bash
+npx hardhat run scripts/deploy.ts
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+---
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+## Smart Contract
+
+### MaterialPassport.sol
+
+The contract supports:
+
+- Material registration
+- Material verification
+- Material ownership transfer
+- Lifecycle event recording
+- Material status updates
+- Role-based access control using OpenZeppelin AccessControl
+
+---
+
+## Roles
+
+The contract defines the following roles:
+
+- DEFAULT_ADMIN_ROLE
+- MANUFACTURER_ROLE
+- INSPECTOR_ROLE
+- WAREHOUSE_ROLE
+- RECYCLER_ROLE
+
+---
+
+## License
+
+MIT
