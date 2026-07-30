@@ -17,6 +17,15 @@ contract MaterialPassport is AccessControl {
     bytes32 public constant RECYCLER_ROLE =
     keccak256("RECYCLER_ROLE");
 
+    enum MaterialStatus {
+    Manufactured,
+    InTransit,
+    Installed,
+    UnderMaintenance,
+    Recycled,
+    Disposed
+    }
+
     struct Material {
         string materialId;
         string materialName;
@@ -25,6 +34,7 @@ contract MaterialPassport is AccessControl {
         address currentOwner;
         uint256 manufactureDate;
         string metadataURI;
+        MaterialStatus status;
         bool exists;
     }
 
@@ -55,9 +65,13 @@ contract MaterialPassport is AccessControl {
     address indexed newOwner
     );
 
+    event MaterialStatusUpdated(
+    string indexed materialId,
+    MaterialStatus newStatus
+    );
+
     constructor(address admin) {
     _grantRole(DEFAULT_ADMIN_ROLE, admin);
-
     _grantRole(MANUFACTURER_ROLE, admin);
     _grantRole(INSPECTOR_ROLE, admin);
     _grantRole(WAREHOUSE_ROLE, admin);
@@ -87,6 +101,7 @@ contract MaterialPassport is AccessControl {
             currentOwner: _owner,
             manufactureDate: _manufactureDate,
             metadataURI: _metadataURI,
+            status: MaterialStatus.Manufactured,
             exists: true
         });
 
@@ -152,6 +167,35 @@ contract MaterialPassport is AccessControl {
         _materialId,
         previousOwner,
         _newOwner
+    );
+    }
+
+    function updateMaterialStatus(
+    string memory _materialId,
+    MaterialStatus _newStatus
+)
+    public
+    onlyRole(INSPECTOR_ROLE)
+{
+    require(
+        materials[_materialId].exists,
+        "Material not found"
+    );
+
+    materials[_materialId].status = _newStatus;
+
+    materialHistory[_materialId].push(
+        LifecycleEvent({
+            timestamp: block.timestamp,
+            eventType: "Status Update",
+            description: "Material status updated",
+            performedBy: msg.sender
+        })
+    );
+
+    emit MaterialStatusUpdated(
+        _materialId,
+        _newStatus
     );
     }
 
