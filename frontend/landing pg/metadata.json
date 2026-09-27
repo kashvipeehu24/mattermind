@@ -1,0 +1,6 @@
+{
+  "name": "MatterMind Material Intelligence",
+  "description": "Enterprise Material Intelligence Platform powered by AI, Blockchain, and Digital Material Passports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
