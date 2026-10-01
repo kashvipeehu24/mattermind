@@ -4,5 +4,6 @@ from backend.app.models.refresh_token import RefreshToken
 from backend.app.models.manufacturer import Manufacturer
 from backend.app.models.material_history import MaterialHistory
 from .analysis import Analysis
+from backend.app.models.blockchain_record import BlockchainRecord
 
-__all__ = ["Material", "User", "RefreshToken", "Manufacturer", "MaterialHistory"]
+__all__ = ["Material", "User", "RefreshToken", "Manufacturer", "MaterialHistory", "Analysis", "BlockchainRecord"]

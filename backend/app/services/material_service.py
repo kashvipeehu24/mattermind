@@ -7,6 +7,7 @@ from sqlalchemy import or_
 from backend.app.models.material import Material
 from backend.app.models.material_history import MaterialHistory
 from backend.app.schemas.material import MaterialCreate, MaterialUpdate
+from backend.app.services.blockchain_service import BlockchainService
 from backend.app.schemas.material_history import (
     MaterialHistoryResponse,
     MaterialPassportResponse,
@@ -60,6 +61,10 @@ class MaterialService:
         )
         db.add(history)
         db.commit()
+        BlockchainService(db).create_record(
+           material_id=db_material.id,
+           transaction_type="created",
+)
 
         return db_material
 
@@ -81,6 +86,10 @@ class MaterialService:
         db.add(db_material)
         db.commit()
         db.refresh(db_material)
+        BlockchainService(db).create_record(
+          material_id=db_material.id,
+          transaction_type="updated",
+)
 
         if changes:
             history = MaterialHistory(
@@ -96,8 +105,15 @@ class MaterialService:
 
     @staticmethod
     def delete_material(db: Session, db_material: Material) -> None:
+        # Remove from blockchain
+        BlockchainService.remove_material(db_material.id)
+
         db.delete(db_material)
         db.commit()
+        BlockchainService(db).create_record(
+          material_id=db_material.id,
+          transaction_type="deleted",
+)
 
     @staticmethod
     def search_materials(

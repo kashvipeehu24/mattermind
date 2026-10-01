@@ -15,6 +15,7 @@ from backend.app.api.dashboard import router as dashboard_router
 from backend.app.api.analytics import router as analytics_router
 from backend.app.api.reports import router as reports_router
 from backend.app.api.ai import router as ai_router
+from backend.app.api.blockchain import router as blockchain_router
 
 setup_logging()
 Base.metadata.create_all(bind=engine)
@@ -43,7 +44,7 @@ app.include_router(dashboard_router)
 app.include_router(analytics_router)
 app.include_router(reports_router)
 app.include_router(ai_router)
-
+app.include_router(blockchain_router)
 @app.get("/")
 def root():
     return {"project": "MatterMind", "status": "Backend Running 🚀"}
