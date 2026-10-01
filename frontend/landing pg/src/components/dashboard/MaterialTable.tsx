@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MaterialItem, AlertSeverity, PassportStatus } from '../types';
+import { MaterialItem, AlertSeverity, PassportStatus } from '../../types';
 import { HealthBadge, BlockchainBadge, PassportBadge } from './StatusBadges';
 import {
   ArrowUpDown,

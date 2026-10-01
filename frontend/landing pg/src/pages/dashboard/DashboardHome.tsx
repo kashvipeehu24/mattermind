@@ -4,7 +4,7 @@ import { ChartCard } from '../../components/dashboard/ChartCard';
 import { MaterialTable } from '../../components/dashboard/MaterialTable';
 import { MaterialHealthHeatmap } from '../../components/dashboard/MaterialHealthHeatmap';
 import { SeverityBadge, BlockchainBadge } from '../../components/dashboard/StatusBadges';
-import { MaterialItem, AIAlert } from '../types';
+import { MaterialItem, AIAlert } from '../../types';
 import {
   MOCK_CHART_DEGRADATION,
   MOCK_CHART_CARBON_TREND,

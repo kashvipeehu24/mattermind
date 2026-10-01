@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Bell, ShieldAlert, AlertTriangle, Sparkles, Check, ExternalLink, Filter } from 'lucide-react';
-import { MOCK_ALERTS } from '../data/mockData';
-import { AIAlert, AlertSeverity } from '../types';
+import { MOCK_ALERTS } from '../../data/mockData';
+import { AIAlert, AlertSeverity } from '../../types';
 
 interface NotificationMenuProps {
   onSelectAlert?: (alert: AIAlert) => void;

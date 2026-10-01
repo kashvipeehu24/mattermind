@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { MaterialItem } from '../types';
-import { MaterialTable } from '../components/MaterialTable';
-import { StatCard } from '../components/StatCard';
-import { PassportBadge, BlockchainBadge } from '../components/StatusBadges';
+import { MaterialItem } from '../../types';
+import { MaterialTable } from '../../components/dashboard/MaterialTable';
+import { StatCard } from '../../components/dashboard/StatCard';
+import { PassportBadge, BlockchainBadge } from '../../components/dashboard/StatusBadges';
 import { Database, FileCheck, ShieldCheck, Filter, Plus, Download, Sparkles } from 'lucide-react';
 
 interface MaterialCatalogProps {

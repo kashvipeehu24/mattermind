@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { MaterialItem } from '../types';
-import { ChartCard } from '../components/ChartCard';
-import { StatCard } from '../components/StatCard';
-import { MOCK_CHART_DEGRADATION } from '../data/mockData';
+import { MaterialItem } from '../../types';
+import { ChartCard } from '../../components/dashboard/ChartCard';
+import { StatCard } from '../../components/dashboard/StatCard';
+import { MOCK_CHART_DEGRADATION } from '../../data/mockData';
 import {
   ResponsiveContainer,
   LineChart,

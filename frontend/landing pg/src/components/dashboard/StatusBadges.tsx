@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertSeverity, PassportStatus } from '../types';
+import { AlertSeverity, PassportStatus } from '../../types';
 import { CheckCircle2, AlertTriangle, ShieldAlert, Sparkles, FileCheck, Shield, Clock } from 'lucide-react';
 
 export const HealthBadge: React.FC<{ score: number; showLabel?: boolean }> = ({ score, showLabel = true }) => {

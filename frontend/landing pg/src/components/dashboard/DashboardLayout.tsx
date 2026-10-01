@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import { MaterialPassportDrawer } from './MaterialPassportDrawer';
 import { AIQuickAssistant } from './AIQuickAssistant';
-import { MaterialItem, AIAlert } from '../types';
+import { MaterialItem, AIAlert } from '../../types';
 
 interface DashboardLayoutProps {
   searchQuery: string;

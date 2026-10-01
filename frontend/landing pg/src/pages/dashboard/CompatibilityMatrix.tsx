@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { MaterialItem } from '../types';
-import { MOCK_COMPATIBILITY_PAIRS } from '../data/mockData';
+import { MaterialItem } from '../../types';
+import { MOCK_COMPATIBILITY_PAIRS } from '../../data/mockData';
 import { Grid2x2Check, Sparkles, AlertTriangle, CheckCircle2, ShieldAlert, ArrowRight, Layers } from 'lucide-react';
 
 interface CompatibilityMatrixProps {

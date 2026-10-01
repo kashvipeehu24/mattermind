@@ -36,7 +36,7 @@ class Explainer:
             header_lines.append(f"Condition: {condition}")
 
         prediction_sentences = self._format_prediction_sentences(predictions)
-        recommendation = self._build_recommendation(parsing=predictions)
+        recommendation = self._build_recommendation(predictions=predictions)
 
         payload = []
         if header_lines:

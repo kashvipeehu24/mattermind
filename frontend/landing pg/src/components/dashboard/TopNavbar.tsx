@@ -3,7 +3,7 @@ import { SearchBar } from './SearchBar';
 import { NotificationMenu } from './NotificationMenu';
 import { UserProfileDropdown } from './UserProfileDropdown';
 import { Sparkles, Menu, Activity, ShieldCheck } from 'lucide-react';
-import { MaterialItem, AIAlert } from '../types';
+import { MaterialItem, AIAlert } from '../../types';
 
 interface TopNavbarProps {
   searchQuery: string;

@@ -1,8 +1,8 @@
 import React from 'react';
-import { MaterialItem } from '../types';
-import { StatCard } from '../components/StatCard';
-import { ChartCard } from '../components/ChartCard';
-import { MOCK_SUSTAINABILITY, MOCK_CHART_CARBON_TREND } from '../data/mockData';
+import { MaterialItem } from '../../types';
+import { StatCard } from '../../components/dashboard/StatCard';
+import { ChartCard } from '../../components/dashboard/ChartCard';
+import { MOCK_SUSTAINABILITY, MOCK_CHART_CARBON_TREND } from '../../data/mockData';
 import {
   ResponsiveContainer,
   BarChart,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MaterialItem } from '../types';
+import { MaterialItem } from '../../types';
 import { HealthBadge, BlockchainBadge, PassportBadge, SeverityBadge } from './StatusBadges';
 import {
   X,

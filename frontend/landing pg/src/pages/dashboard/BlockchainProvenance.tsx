@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MaterialItem } from '../types';
-import { StatCard } from '../components/StatCard';
-import { BlockchainBadge } from '../components/StatusBadges';
+import { MaterialItem } from '../../types';
+import { StatCard } from '../../components/dashboard/StatCard';
+import { BlockchainBadge } from '../../components/dashboard/StatusBadges';
 import { ShieldCheck, Lock, ExternalLink, CheckCircle2, Search, Copy, FileCheck } from 'lucide-react';
 
 interface BlockchainProvenanceProps {

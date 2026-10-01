@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X, Sparkles, SlidersHorizontal, ArrowRight } from 'lucide-react';
-import { MOCK_MATERIALS } from '../data/mockData';
-import { MaterialItem } from '../types';
+import { MOCK_MATERIALS } from '../../data/mockData';
+import { MaterialItem } from '../../types';
 
 interface SearchBarProps {
   value: string;

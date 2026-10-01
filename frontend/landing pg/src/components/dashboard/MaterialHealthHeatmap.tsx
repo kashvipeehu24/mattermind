@@ -1,5 +1,5 @@
 import React from 'react';
-import { MaterialItem } from '../types';
+import { MaterialItem } from '../../types';
 import { Sparkles, Grid3X3, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 interface MaterialHealthHeatmapProps {

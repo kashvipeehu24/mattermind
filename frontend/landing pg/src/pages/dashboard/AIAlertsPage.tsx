@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MOCK_ALERTS } from '../data/mockData';
-import { AIAlert, AlertSeverity } from '../types';
-import { SeverityBadge } from '../components/StatusBadges';
+import { MOCK_ALERTS } from '../../data/mockData';
+import { AIAlert, AlertSeverity } from '../../types';
+import { SeverityBadge } from '../../components/dashboard/StatusBadges';
 import { BellRing, ShieldAlert, AlertTriangle, CheckCircle2, Sparkles, Filter, ExternalLink, ShieldCheck, RefreshCw } from 'lucide-react';
 
 export const AIAlertsPage: React.FC = () => {
