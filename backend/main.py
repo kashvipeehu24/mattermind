@@ -93,7 +93,7 @@ app.include_router(blockchain_router)
 
 @app.get("/health")
 def health():
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": "v1.0.1-single-service"}
 
 
 # ============================================================
