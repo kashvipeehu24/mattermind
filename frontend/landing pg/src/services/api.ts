@@ -3,7 +3,7 @@
  * Handles HTTP requests to the FastAPI backend service.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://mattermind.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 class APIError extends Error {
   constructor(public status: number, message: string, public data?: any) {

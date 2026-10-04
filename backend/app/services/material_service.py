@@ -105,15 +105,12 @@ class MaterialService:
 
     @staticmethod
     def delete_material(db: Session, db_material: Material) -> None:
-        # Remove from blockchain
-        BlockchainService.remove_material(db_material.id)
-
+        BlockchainService(db).create_record(
+            material_id=db_material.id,
+            transaction_type="deleted",
+        )
         db.delete(db_material)
         db.commit()
-        BlockchainService(db).create_record(
-          material_id=db_material.id,
-          transaction_type="deleted",
-)
 
     @staticmethod
     def search_materials(

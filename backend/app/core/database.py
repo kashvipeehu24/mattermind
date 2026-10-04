@@ -4,6 +4,8 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from backend.app.core.config import settings
 
 DATABASE_URL = settings.DATABASE_URL
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 connect_args = (
     {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}

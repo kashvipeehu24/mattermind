@@ -8,6 +8,7 @@ PyJWT==2.13.0
 bcrypt==5.0.0
 pandas==2.3.3
 openpyxl==3.1.5
+psycopg2-binary>=2.9.9
 
 # Testing
 pytest==9.1.1
