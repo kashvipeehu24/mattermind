@@ -112,10 +112,11 @@ def health():
 
 candidate_paths = [
     Path("/app/frontend_dist"),
+    Path(__file__).resolve().parent / "frontend_dist",
     Path(__file__).resolve().parent.parent / "frontend_dist",
     Path(__file__).resolve().parent.parent / "frontend" / "landing pg" / "dist",
     Path.cwd() / "frontend_dist",
-    Path.cwd() / "frontend" / "landing pg" / "dist",
+    Path.cwd() / "backend" / "frontend_dist",
 ]
 
 FRONTEND_DIST = None
@@ -124,34 +125,29 @@ for p in candidate_paths:
         FRONTEND_DIST = p
         break
 
-if FRONTEND_DIST:
-    # Serve Vite-generated static assets.
-    if (FRONTEND_DIST / "assets").exists():
-        app.mount(
-            "/assets",
-            StaticFiles(directory=FRONTEND_DIST / "assets"),
-            name="assets",
-        )
+if FRONTEND_DIST is None:
+    FRONTEND_DIST = Path(__file__).resolve().parent / "frontend_dist"
 
-    # Serve React application at the root URL.
-    @app.get("/")
-    def serve_frontend():
-        return FileResponse(FRONTEND_DIST / "index.html")
+if (FRONTEND_DIST / "assets").exists():
+    app.mount(
+        "/assets",
+        StaticFiles(directory=FRONTEND_DIST / "assets"),
+        name="assets",
+    )
 
-    # React Router fallback.
-    @app.get("/{path:path}")
-    def serve_react_route(path: str):
-        requested_file = FRONTEND_DIST / path
+@app.get("/")
+def serve_frontend():
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"project": "MatterMind", "status": "Frontend index.html not found", "checked": str(index_file)}
 
-        if requested_file.is_file():
-            return FileResponse(requested_file)
-
-        return FileResponse(FRONTEND_DIST / "index.html")
-
-else:
-    @app.get("/")
-    def root():
-        return {
-            "project": "MatterMind",
-            "status": "Backend Running 🚀 (frontend build missing)",
-        }
+@app.get("/{path:path}")
+def serve_react_route(path: str):
+    requested_file = FRONTEND_DIST / path
+    if requested_file.is_file():
+        return FileResponse(requested_file)
+    index_file = FRONTEND_DIST / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"detail": "Not Found"}
