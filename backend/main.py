@@ -113,6 +113,8 @@ def health():
 FRONTEND_DIST = Path("/app/frontend_dist")
 if not FRONTEND_DIST.exists():
     FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
+if not FRONTEND_DIST.exists():
+    FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "landing pg" / "dist"
 
 
 if FRONTEND_DIST.exists():
