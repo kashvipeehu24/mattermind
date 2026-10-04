@@ -110,21 +110,28 @@ def health():
 # public URL as the API.
 # ============================================================
 
-FRONTEND_DIST = Path("/app/frontend_dist")
-if not FRONTEND_DIST.exists():
-    FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend_dist"
-if not FRONTEND_DIST.exists():
-    FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "landing pg" / "dist"
+candidate_paths = [
+    Path("/app/frontend_dist"),
+    Path(__file__).resolve().parent.parent / "frontend_dist",
+    Path(__file__).resolve().parent.parent / "frontend" / "landing pg" / "dist",
+    Path.cwd() / "frontend_dist",
+    Path.cwd() / "frontend" / "landing pg" / "dist",
+]
 
+FRONTEND_DIST = None
+for p in candidate_paths:
+    if (p / "index.html").exists():
+        FRONTEND_DIST = p
+        break
 
-if FRONTEND_DIST.exists():
-
+if FRONTEND_DIST:
     # Serve Vite-generated static assets.
-    app.mount(
-        "/assets",
-        StaticFiles(directory=FRONTEND_DIST / "assets"),
-        name="assets",
-    )
+    if (FRONTEND_DIST / "assets").exists():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=FRONTEND_DIST / "assets"),
+            name="assets",
+        )
 
     # Serve React application at the root URL.
     @app.get("/")
@@ -132,9 +139,6 @@ if FRONTEND_DIST.exists():
         return FileResponse(FRONTEND_DIST / "index.html")
 
     # React Router fallback.
-    #
-    # If the requested path is not an actual file, return
-    # index.html so React Router can handle the route.
     @app.get("/{path:path}")
     def serve_react_route(path: str):
         requested_file = FRONTEND_DIST / path
@@ -145,12 +149,9 @@ if FRONTEND_DIST.exists():
         return FileResponse(FRONTEND_DIST / "index.html")
 
 else:
-
-    # Fallback used when the React production build has not
-    # been copied into the backend container yet.
     @app.get("/")
     def root():
         return {
             "project": "MatterMind",
-            "status": "Backend Running 🚀",
+            "status": "Backend Running 🚀 (frontend build missing)",
         }
