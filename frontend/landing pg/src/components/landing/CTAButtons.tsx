@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { PlayCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 
@@ -13,19 +14,40 @@ export const CTAButtons: React.FC<CTAButtonsProps> = ({
   onWatchDemo,
   className = '',
 }) => {
+  const navigate = useNavigate();
+
+  const handleStartDemo = () => {
+    if (onStartDemo) {
+      onStartDemo();
+    } else {
+      navigate('/dashboard');
+    }
+  };
+
+  const handleWatchDemo = () => {
+    if (onWatchDemo) {
+      onWatchDemo();
+    } else {
+      const element = document.getElementById('casestudies');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <div className={`flex flex-wrap items-center gap-4 ${className}`}>
       <Button
         variant="primary"
         size="lg"
-        onClick={onStartDemo}
+        onClick={handleStartDemo}
         className="shadow-xl shadow-slate-900/10"
       >
         Start Free Demo
       </Button>
       <button
         type="button"
-        onClick={onWatchDemo}
+        onClick={handleWatchDemo}
         className="flex items-center gap-2.5 bg-white border border-[#e2e8f0] px-8 py-4 rounded-full font-bold text-base md:text-lg text-[#0f172a] hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer"
       >
         <PlayCircle className="w-5 h-5 text-[#316bf3]" />
@@ -34,3 +56,4 @@ export const CTAButtons: React.FC<CTAButtonsProps> = ({
     </div>
   );
 };
+

@@ -1,11 +1,22 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 import { pricingTiers } from '../../data/mockData';
 import { Button } from '../ui/Button';
 
 export const PricingSection: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handlePricingClick = (buttonText: string) => {
+    if (buttonText.toLowerCase().includes('contact') || buttonText.toLowerCase().includes('sales')) {
+      window.location.href = 'mailto:sales@mattermind.io?subject=Enterprise%20MatterMind%20Inquiry';
+    } else {
+      navigate('/register');
+    }
+  };
+
   return (
-    <section className="py-24 px-6 md:px-10 bg-white border-t border-slate-100">
+    <section id="pricing" className="py-24 px-6 md:px-10 bg-white border-t border-slate-100">
       <div className="max-w-[1440px] mx-auto">
         <div className="text-center max-w-2xl mx-auto mb-16">
           <h2 className="text-4xl md:text-5xl font-black text-[#0f172a] mb-4 tracking-tight">
@@ -69,6 +80,7 @@ export const PricingSection: React.FC = () => {
                   variant={tier.buttonVariant === 'primary' ? 'blue' : 'outline'}
                   size="lg"
                   className="w-full text-center"
+                  onClick={() => handlePricingClick(tier.buttonText)}
                 >
                   {tier.buttonText}
                 </Button>

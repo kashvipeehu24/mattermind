@@ -22,6 +22,19 @@ export const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate('/' + href);
+      }
+    }
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 w-full z-50 bg-white/85 backdrop-blur-md border-b border-[#e2e8f0] transition-shadow duration-300 ${
@@ -42,6 +55,7 @@ export const Navbar: React.FC = () => {
               <a
                 key={item.label}
                 href={item.href}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className="text-sm font-semibold text-[#45464d] hover:text-[#0f172a] transition-colors"
               >
                 {item.label}
@@ -88,7 +102,10 @@ export const Navbar: React.FC = () => {
               <a
                 key={item.label}
                 href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, item.href);
+                }}
                 className="text-base font-semibold text-[#45464d] hover:text-[#0f172a] py-2 border-b border-slate-100"
               >
                 {item.label}
