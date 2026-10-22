@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '../../components/layout/Navbar';
 import { Footer } from '../../components/layout/Footer';
 import { Hero } from '../../components/landing/Hero';
@@ -13,11 +14,10 @@ import { PricingSection } from '../../components/landing/PricingSection';
 import { FAQSection } from '../../components/landing/FAQSection';
 
 export const Landing: React.FC = () => {
+  const navigate = useNavigate();
+
   const handleStartDemo = () => {
-    const element = document.getElementById('platform');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    navigate('/dashboard');
   };
 
   const handleWatchDemo = () => {

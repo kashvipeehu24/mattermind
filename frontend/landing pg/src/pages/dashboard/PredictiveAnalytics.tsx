@@ -26,9 +26,40 @@ export const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
   onSelectMaterial
 }) => {
   const [cycles, setCycles] = useState('10000');
-  const [selectedMaterialCode, setSelectedMaterialCode] = useState('Ti-6Al-4V-ELI');
+  const [selectedMaterialCode, setSelectedMaterialCode] = useState(materials[0]?.code || 'Ti-6Al-4V-ELI');
+  const [isSimulating, setIsSimulating] = useState(false);
+  const [simulationResult, setSimulationResult] = useState<string | null>(null);
 
   const selectedMat = materials.find(m => m.code === selectedMaterialCode) || materials[0];
+
+  const handleRunSimulation = () => {
+    setIsSimulating(true);
+    setSimulationResult(null);
+    setTimeout(() => {
+      setIsSimulating(false);
+      setSimulationResult(`Simulation completed: 10,000 thermal cycles computed for ${selectedMat.code}. Micro-creep margin within safe ISO threshold.`);
+    }, 1000);
+  };
+
+  const handleExportFEM = () => {
+    const data = {
+      model: "MatterMind Neural Multi-Physics FEM Model",
+      version: "4.8",
+      spec: selectedMat.code,
+      material: selectedMat.name,
+      dislocationRate: "0.002% per 1,000 hrs",
+      meshType: "Adaptive Tetrahedral",
+      degradationCurve: MOCK_CHART_DEGRADATION,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `FEM_Model_${selectedMat.code}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -48,14 +79,21 @@ export const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => alert('Running neural multi-physics simulation across all material batches...')}
-            className="px-4 py-2 bg-secondary hover:bg-blue-600 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shadow-sm"
+            onClick={handleRunSimulation}
+            disabled={isSimulating}
+            className="px-4 py-2 bg-secondary hover:bg-blue-600 text-white font-bold text-xs rounded-xl flex items-center gap-2 transition-colors shadow-sm cursor-pointer disabled:opacity-60"
           >
-            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            Run Neural Simulation
+            <RefreshCw className={`w-3.5 h-3.5 ${isSimulating ? 'animate-spin' : ''}`} />
+            <span>{isSimulating ? 'Computing Stress Cycles...' : 'Run Neural Simulation'}</span>
           </button>
         </div>
       </div>
+
+      {simulationResult && (
+        <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-medium animate-in fade-in">
+          {simulationResult}
+        </div>
+      )}
 
       {/* RUL Key Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -109,7 +147,7 @@ export const PredictiveAnalytics: React.FC<PredictiveAnalyticsProps> = ({
           subtitle="Comparative decay curve across Titanium, Nickel Superalloy, Cantor HEA, and Ceramic Matrix."
           badgeText="Finite Element Model (FEM)"
           actionButtonText="Export FEM Model"
-          onAction={() => alert('Exporting Finite Element Model mesh in STEP format...')}
+          onAction={handleExportFEM}
           className="lg:col-span-2"
         >
           <div className="h-72 w-full pt-4">

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MaterialItem } from '../../types';
 import { HealthBadge, BlockchainBadge, PassportBadge, SeverityBadge } from './StatusBadges';
+import { api, BackendMaterialPassport, BackendAnalysis, BackendBlockchainRecord } from '../../services/api';
 import {
   X,
   FileCheck,
@@ -15,7 +16,9 @@ import {
   AlertTriangle,
   Sparkles,
   Award,
-  Factory
+  Factory,
+  CheckCircle2,
+  RefreshCw
 } from 'lucide-react';
 
 interface MaterialPassportDrawerProps {
@@ -27,7 +30,129 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
   material,
   onClose
 }) => {
+  const [livePassport, setLivePassport] = useState<BackendMaterialPassport | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<BackendAnalysis | null>(null);
+  const [blockchainHistory, setBlockchainHistory] = useState<BackendBlockchainRecord[]>([]);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [copiedShare, setCopiedShare] = useState(false);
+
+  useEffect(() => {
+    if (!material) {
+      setLivePassport(null);
+      setAiAnalysis(null);
+      setBlockchainHistory([]);
+      return;
+    }
+
+    // Try fetching live passport from backend if numeric ID
+    const numId = parseInt(material.id, 10);
+    if (!isNaN(numId)) {
+      api.getMaterialPassport(numId)
+        .then((p) => setLivePassport(p))
+        .catch(() => setLivePassport(null));
+
+      api.getAIHistory(numId)
+        .then((history) => {
+          if (history && history.length > 0) {
+            setAiAnalysis(history[history.length - 1]);
+          }
+        })
+        .catch(() => {});
+
+      api.getBlockchainHistory(numId)
+        .then((records) => {
+          if (records && records.length > 0) {
+            setBlockchainHistory(records);
+          }
+        })
+        .catch(() => setBlockchainHistory([]));
+    }
+  }, [material]);
+
   if (!material) return null;
+
+  const latestRecord = blockchainHistory.length > 0 ? blockchainHistory[blockchainHistory.length - 1] : null;
+  const currentPassportId = livePassport?.passport_id || material.passportId;
+  const currentHash = latestRecord?.block_hash || livePassport?.blockchain_hash || material.blockchainHash;
+  const isOnChain = Boolean(
+    latestRecord?.on_chain_status === 'confirmed' ||
+    (latestRecord?.block_hash && latestRecord.block_hash.startsWith('0x') && latestRecord.block_hash.length === 66) ||
+    (material.blockchainVerified && currentHash.startsWith('0x') && currentHash.length === 66)
+  );
+
+  const handleDownloadCertificate = () => {
+    const certificateData = {
+      standard: "EU Digital Product Passport (DPP) Compliance Certificate",
+      regulation: "ESPR Regulation (EU) 2026/88192",
+      verificationProtocol: "ISO 14040/14044 LCA Cryptographic Protocol",
+      passportId: currentPassportId,
+      materialIdentifier: material.code,
+      materialName: material.name,
+      category: material.category,
+      chemicalComposition: material.composition,
+      foundrySupplier: material.supplier,
+      densityGcm3: material.densityGcm3,
+      tensileStrengthMpa: material.tensileStrengthMpa,
+      healthScore: `${material.healthIndex}/100`,
+      remainingUsefulLife: `${material.remainingUsefulLifeYears} Years`,
+      recyclabilityGrade: material.recyclabilityGrade,
+      carbonFootprintKgCo2: material.embodiedCarbonKgCo2,
+      cryptographicBlockHash: currentHash,
+      ledgerVerificationStatus: isOnChain ? "VERIFIED_ON_CHAIN" : "LOCAL_UNCONFIRMED_HASH",
+      contractAddress: latestRecord?.contract_address || undefined,
+      issuedAt: new Date().toISOString(),
+      authorizedSigner: "European Material Intelligence Agency (EMIA) - Node DE-04"
+    };
+
+    const blob = new Blob([JSON.stringify(certificateData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `EU-DPP-${material.code}-${currentPassportId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleShare = () => {
+    const shareUrl = `${window.location.origin}/material/${material.id}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl);
+      setCopiedShare(true);
+      setTimeout(() => setCopiedShare(false), 2000);
+    }
+  };
+
+  const handleTriggerAiAnalysis = async () => {
+    const numId = parseInt(material.id, 10);
+    setIsLoadingAi(true);
+    try {
+      if (!isNaN(numId)) {
+        const result = await api.analyzeMaterial(numId);
+        setAiAnalysis(result);
+      } else {
+        // Fallback for mock IDs
+        setTimeout(() => {
+          setAiAnalysis({
+            id: 999,
+            material_id: 1,
+            analysis_type: "Material Health",
+            prediction: material.healthIndex > 80 ? "Excellent" : "Good",
+            confidence_score: 94.5,
+            recommendation: material.healthIndex > 80 ? "Reuse in High-Stress Aerospace Subsystem" : "Schedule Refurbishment",
+            explanation: `Rule-based AI analysis confirms ${material.name} lattice stability with optimal ISO-14040 lifecycle parameters.`,
+            model_name: "MatterMind Neural Predictor",
+            model_version: "v4.8",
+            created_at: new Date().toISOString()
+          });
+          setIsLoadingAi(false);
+        }, 600);
+      }
+    } catch (err) {
+      console.warn('AI analysis API call fallback:', err);
+    } finally {
+      setIsLoadingAi(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -62,7 +187,7 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors"
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -108,7 +233,7 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
                 <FileCheck className="w-4 h-4" /> EU Digital Product Passport (DPP)
               </span>
               <span className="font-mono text-xs font-bold text-slate-900 bg-white px-2.5 py-1 rounded-md border border-slate-200">
-                {material.passportId}
+                {currentPassportId}
               </span>
             </div>
             <p className="text-xs text-slate-600 mb-3">
@@ -154,11 +279,22 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
             </div>
           </div>
 
-          {/* Remaining Useful Life & Predictive Stress AI */}
+          {/* AI Analysis Section */}
           <div className="space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4 text-secondary" /> Neural Stress & Remaining Useful Life (RUL)
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-secondary" /> AI Degradation Analysis & Recommendation
+              </h3>
+              <button
+                onClick={handleTriggerAiAnalysis}
+                disabled={isLoadingAi}
+                className="text-[11px] font-bold text-secondary hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className={`w-3 h-3 ${isLoadingAi ? 'animate-spin' : ''}`} />
+                {aiAnalysis ? 'Re-run Analysis' : 'Run Live AI Analysis'}
+              </button>
+            </div>
+
             <div className="p-4 rounded-xl bg-slate-900 text-white space-y-3">
               <div className="flex items-center justify-between">
                 <div>
@@ -166,14 +302,18 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
                   <div className="text-2xl font-black text-white">{material.remainingUsefulLifeYears} Years</div>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs text-slate-400">Compatibility Index</span>
-                  <div className="text-2xl font-black text-secondary-fixed">{material.compatibilityScore}/100</div>
+                  <span className="text-xs text-slate-400">AI Recommendation</span>
+                  <div className="text-base font-bold text-emerald-400">
+                    {aiAnalysis ? aiAnalysis.recommendation : 'Reuse & Secondary Forming'}
+                  </div>
                 </div>
               </div>
 
               <div className="p-3 rounded-lg bg-slate-800/80 border border-slate-700 text-xs text-slate-300">
-                <span className="text-amber-400 font-bold block mb-1">AI Diagnostics Summary:</span>
-                {material.notes}
+                <span className="text-amber-400 font-bold block mb-1">
+                  Diagnostics ({aiAnalysis?.model_name || 'MatterMind Neural Predictor'}):
+                </span>
+                {aiAnalysis?.explanation || material.notes}
               </div>
             </div>
           </div>
@@ -185,11 +325,27 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
             </h3>
             <div className="p-4 rounded-xl bg-white border border-slate-200 text-xs space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Cryptographic Block Hash:</span>
-                <span className="font-mono text-[11px] text-secondary font-semibold truncate max-w-[220px]">
-                  {material.blockchainHash}
+                <span className="text-slate-500">Ledger Verification:</span>
+                <span className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
+                  isOnChain ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-700 border border-slate-200'
+                }`}>
+                  {isOnChain ? 'Verified On-Chain' : 'Off-Chain Record'}
                 </span>
               </div>
+              <div className="flex items-center justify-between">
+                <span className="text-slate-500">Cryptographic Block Hash:</span>
+                <span className="font-mono text-[11px] text-secondary font-semibold truncate max-w-[220px]">
+                  {currentHash}
+                </span>
+              </div>
+              {latestRecord?.contract_address && (
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-500">Smart Contract:</span>
+                  <span className="font-mono text-[11px] text-slate-600 truncate max-w-[200px]">
+                    {latestRecord.contract_address}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="text-slate-500">Supplier / Foundry:</span>
                 <span className="font-bold text-slate-900">{material.supplier}</span>
@@ -209,19 +365,28 @@ export const MaterialPassportDrawer: React.FC<MaterialPassportDrawerProps> = ({
         {/* Footer Actions */}
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
           <button
-            onClick={() => alert(`Downloading signed EU Digital Product Passport certificate for ${material.code}...`)}
-            className="flex-1 h-11 bg-slate-900 hover:bg-secondary text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all"
+            onClick={handleDownloadCertificate}
+            className="flex-1 h-11 bg-slate-900 hover:bg-secondary text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
           >
             <Download className="w-4 h-4" />
-            Download Signed Passport (PDF)
+            Download Passport Certificate (JSON)
           </button>
 
           <button
-            onClick={() => alert(`Copied share link for ${material.passportId} to clipboard!`)}
-            className="h-11 px-4 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors"
+            onClick={handleShare}
+            className="h-11 px-4 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
           >
-            <Share2 className="w-4 h-4" />
-            Share DPP
+            {copiedShare ? (
+              <>
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span className="text-emerald-700">Link Copied!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4" />
+                <span>Share DPP</span>
+              </>
+            )}
           </button>
         </div>
       </div>

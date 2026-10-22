@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { SearchBar } from './SearchBar';
 import { NotificationMenu } from './NotificationMenu';
 import { UserProfileDropdown } from './UserProfileDropdown';
@@ -28,17 +29,17 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
       <div className="flex items-center gap-3 min-w-0">
         <button
           onClick={onToggleMobileSidebar}
-          className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors"
+          className="lg:hidden p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
           title="Toggle Navigation Menu"
         >
           <Menu className="w-5 h-5" />
         </button>
 
         <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 font-medium">
-          <span className="flex items-center gap-1.5 text-slate-900 font-bold">
+          <Link to="/dashboard" className="flex items-center gap-1.5 text-slate-900 font-bold hover:text-secondary transition-colors">
             <span className="w-2 h-2 rounded-full bg-secondary" />
             MatterMind Intelligence
-          </span>
+          </Link>
           <span>/</span>
           <span className="truncate">Enterprise Dashboard</span>
         </div>

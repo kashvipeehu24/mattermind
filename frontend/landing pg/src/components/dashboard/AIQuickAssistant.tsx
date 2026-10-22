@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bot, X, Sparkles, Send, RefreshCw, CheckCircle2, ShieldCheck, ArrowRight, Zap, Layers } from 'lucide-react';
+import { Bot, X, Sparkles, Send, RefreshCw, Layers } from 'lucide-react';
+import { api } from '../../services/api';
 
 interface AIQuickAssistantProps {
   isOpen: boolean;
@@ -12,7 +13,7 @@ export const AIQuickAssistant: React.FC<AIQuickAssistantProps> = ({ isOpen, onCl
   const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; codeSnippet?: string }>>([
     {
       sender: 'ai',
-      text: 'Hello Dr. Vance! I am your MatterMind Neural Material Copilot. I can run multi-alloy thermal shock simulations, predict micro-grain dislocation rates, or verify EU Digital Product Passport compliance.'
+      text: 'Hello Dr. Vance! I am your MatterMind Neural Material Copilot. I can run multi-alloy thermal shock simulations, predict micro-grain dislocation rates, verify EU Digital Product Passport compliance, or analyze backend materials by ID (e.g. "analyze material 1").'
     }
   ]);
 
@@ -25,7 +26,7 @@ export const AIQuickAssistant: React.FC<AIQuickAssistantProps> = ({ isOpen, onCl
     'Find bio-sourced PEEK alloy alternatives'
   ];
 
-  const handleSend = (textToSend?: string) => {
+  const handleSend = async (textToSend?: string) => {
     const messageText = textToSend || query;
     if (!messageText.trim()) return;
 
@@ -33,6 +34,27 @@ export const AIQuickAssistant: React.FC<AIQuickAssistantProps> = ({ isOpen, onCl
     setMessages((prev) => [...prev, { sender: 'user', text: messageText }]);
     if (!textToSend) setQuery('');
     setIsSimulating(true);
+
+    // Check if user is referencing a specific material ID (e.g., "material 1", "analyze 2", "id 3")
+    const matchId = messageText.match(/(?:material|id|batch)\s*#?(\d+)/i);
+    if (matchId) {
+      const materialId = parseInt(matchId[1], 10);
+      try {
+        const analysis = await api.analyzeMaterial(materialId);
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: 'ai',
+            text: `[Live Backend ML Result for Material #${materialId}]: Analysis complete (${analysis.analysis_type || 'Lifecycle Prediction'}). Prediction: ${analysis.prediction}. Recommendation: ${analysis.recommendation || 'Lattice within nominal operational limits.'}`,
+            codeSnippet: `CONFIDENCE: ${(analysis.confidence_score * 100).toFixed(1)}% | MODEL: MatterMind Neural Prognosis | Inferred At: ${new Date().toLocaleTimeString()}`
+          }
+        ]);
+        setIsSimulating(false);
+        return;
+      } catch {
+        // Backend not reachable or material not found; fall through to domain simulation
+      }
+    }
 
     setTimeout(() => {
       let aiResponse = "Based on MatterMind's neural database, the material spec shows exceptional lattice stability with <0.02% dislocation density up to 10,000 thermal cycles.";
@@ -56,7 +78,7 @@ export const AIQuickAssistant: React.FC<AIQuickAssistantProps> = ({ isOpen, onCl
         { sender: 'ai', text: aiResponse, codeSnippet: snippet }
       ]);
       setIsSimulating(false);
-    }, 1200);
+    }, 1000);
   };
 
   return (

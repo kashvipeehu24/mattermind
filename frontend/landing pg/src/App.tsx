@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Landing from './pages/Landing/Landing';
+import { LoginPage } from './pages/Auth/LoginPage';
+import { SettingsPage } from './pages/Settings/SettingsPage';
 import { DashboardLayout } from './components/dashboard/DashboardLayout';
 import { DashboardHome } from './pages/dashboard/DashboardHome';
 import { MaterialCatalog } from './pages/dashboard/MaterialCatalog';
@@ -12,21 +14,72 @@ import { SustainabilityESG } from './pages/dashboard/SustainabilityESG';
 import { AIAlertsPage } from './pages/dashboard/AIAlertsPage';
 import { MOCK_MATERIALS, MOCK_ALERTS } from './data/mockData';
 import { MaterialItem, AIAlert } from './types';
+import { api, mapBackendMaterialToItem } from './services/api';
 
 export default function App() {
-  const [materials] = useState<MaterialItem[]>(MOCK_MATERIALS);
+  const [materials, setMaterials] = useState<MaterialItem[]>(MOCK_MATERIALS);
   const [alerts] = useState<AIAlert[]>(MOCK_ALERTS);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialItem | null>(null);
+  const [dataSource, setDataSource] = useState<'live' | 'demo' | 'empty'>('demo');
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isLoadingApi, setIsLoadingApi] = useState(false);
+
+  const loadMaterials = () => {
+    setIsLoadingApi(true);
+
+    if (!api.isAuthenticated()) {
+      setMaterials(MOCK_MATERIALS);
+      setDataSource('demo');
+      setApiError('Session not authenticated with backend. Displaying curated baseline dataset.');
+      setIsLoadingApi(false);
+      return;
+    }
+
+    api.getMaterials()
+      .then((backendMaterials) => {
+        if (backendMaterials && backendMaterials.length > 0) {
+          const mapped = backendMaterials.map((bm) => mapBackendMaterialToItem(bm));
+          setMaterials(mapped);
+          setDataSource('live');
+          setApiError(null);
+        } else {
+          // Backend returned empty array: report empty state with baseline toggle
+          setMaterials(MOCK_MATERIALS);
+          setDataSource('demo');
+          setApiError('Backend database contains 0 material records. Showing baseline reference dataset.');
+        }
+      })
+      .catch((err) => {
+        console.warn('API getMaterials notice (using fallback workspace dataset):', err?.message || err);
+        setMaterials(MOCK_MATERIALS);
+        setDataSource('demo');
+        setApiError(err?.message || 'Backend materials endpoint unavailable.');
+      })
+      .finally(() => {
+        setIsLoadingApi(false);
+      });
+  };
+
+  useEffect(() => {
+    loadMaterials();
+  }, []);
+
+  const handleAddMaterial = (newMaterial: MaterialItem) => {
+    setMaterials((prev) => [newMaterial, ...prev]);
+  };
 
   const unresolvedAlertCount = alerts.filter((a) => a.status !== 'resolved').length;
 
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public Landing & Marketing */}
         <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/register" element={<Navigate to="/dashboard" replace />} />
+
+        {/* Dedicated Authentication */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<LoginPage />} />
 
         {/* Dashboard Shell with Layout */}
         <Route
@@ -37,6 +90,9 @@ export default function App() {
               unresolvedAlertCount={unresolvedAlertCount}
               selectedMaterial={selectedMaterial}
               onSelectMaterial={setSelectedMaterial}
+              dataSource={dataSource}
+              apiError={apiError}
+              onRetrySync={loadMaterials}
             />
           }
         >
@@ -46,6 +102,8 @@ export default function App() {
               <DashboardHome
                 materials={materials}
                 onSelectMaterial={setSelectedMaterial}
+                dataSource={dataSource}
+                apiError={apiError}
               />
             }
           />
@@ -55,6 +113,23 @@ export default function App() {
               <MaterialCatalog
                 materials={materials}
                 onSelectMaterial={setSelectedMaterial}
+                onAddMaterial={handleAddMaterial}
+                dataSource={dataSource}
+                apiError={apiError}
+                onRetrySync={loadMaterials}
+              />
+            }
+          />
+          <Route
+            path="/catalog"
+            element={
+              <MaterialCatalog
+                materials={materials}
+                onSelectMaterial={setSelectedMaterial}
+                onAddMaterial={handleAddMaterial}
+                dataSource={dataSource}
+                apiError={apiError}
+                onRetrySync={loadMaterials}
               />
             }
           />
@@ -64,6 +139,10 @@ export default function App() {
               <MaterialCatalog
                 materials={materials}
                 onSelectMaterial={setSelectedMaterial}
+                onAddMaterial={handleAddMaterial}
+                dataSource={dataSource}
+                apiError={apiError}
+                onRetrySync={loadMaterials}
               />
             }
           />
@@ -102,17 +181,10 @@ export default function App() {
             element={<SustainabilityESG materials={materials} />}
           />
           <Route path="/alerts" element={<AIAlertsPage />} />
-          <Route
-            path="/settings"
-            element={
-              <div className="p-6 bg-white rounded-xl border border-slate-200">
-                <h2 className="text-xl font-bold text-slate-900 mb-2">Platform Settings</h2>
-                <p className="text-sm text-slate-600">Enterprise Node Configuration & API Preferences.</p>
-              </div>
-            }
-          />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
 
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

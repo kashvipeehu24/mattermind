@@ -122,8 +122,37 @@ export const CompatibilityMatrix: React.FC<CompatibilityMatrixProps> = ({ materi
               {score > 85 ? 'Optimal Combination' : 'Conditional Interface'}
             </span>
             <button
-              onClick={() => alert(`Generated joint specification report for ${baseMat.code} + ${targetMat.code}`)}
-              className="px-4 py-2 bg-secondary hover:bg-blue-600 text-white font-bold text-xs rounded-xl transition-colors shadow-sm"
+              onClick={() => {
+                const specData = {
+                  title: "Multi-Alloy Joint Interface Compatibility Specification",
+                  substrateA: {
+                    code: baseMat.code,
+                    name: baseMat.name,
+                    category: baseMat.category,
+                    thermalConductivity: `${baseMat.thermalConductivity} W/m·K`,
+                    tensileStrength: `${baseMat.tensileStrengthMpa} MPa`
+                  },
+                  substrateB: {
+                    code: targetMat.code,
+                    name: targetMat.name,
+                    category: targetMat.category,
+                    thermalConductivity: `${targetMat.thermalConductivity} W/m·K`,
+                    tensileStrength: `${targetMat.tensileStrengthMpa} MPa`
+                  },
+                  compatibilityScore: `${score}/100`,
+                  verdict: score > 85 ? 'Optimal Interface' : 'Conditional Interface (Requires Passivation Barrier)',
+                  galvanicCorrosionRisk: score > 85 ? 'Low' : 'Moderate',
+                  generatedAt: new Date().toISOString()
+                };
+                const blob = new Blob([JSON.stringify(specData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Joint_Spec_${baseMat.code}_${targetMat.code}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="px-4 py-2 bg-secondary hover:bg-blue-600 text-white font-bold text-xs rounded-xl transition-colors shadow-sm cursor-pointer"
             >
               Export Joint Spec
             </button>

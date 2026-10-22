@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import { navItems } from '../../data/mockData';
 import { Button } from '../ui/Button';
 
 export const Navbar: React.FC = () => {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,11 +31,11 @@ export const Navbar: React.FC = () => {
       <div className="max-w-[1440px] mx-auto px-6 md:px-10 h-20 flex items-center justify-between">
         {/* Brand Logo & Main Nav */}
         <div className="flex items-center gap-12">
-          <a href="#" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <span className="text-2xl md:text-3xl font-black tracking-tighter text-[#0f172a] group-hover:text-[#316bf3] transition-colors">
               MatterMind
             </span>
-          </a>
+          </Link>
 
           <div className="hidden lg:flex items-center gap-8">
             {navItems.map((item) => (
@@ -50,13 +52,17 @@ export const Navbar: React.FC = () => {
 
         {/* Right CTA Buttons */}
         <div className="hidden sm:flex items-center gap-4">
-          <a
-            href="#signin"
+          <Link
+            to="/login"
             className="text-sm font-semibold text-[#0f172a] px-4 py-2 hover:bg-slate-50 rounded-full transition-colors"
           >
             Sign In
-          </a>
-          <Button variant="primary" size="md">
+          </Link>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/dashboard')}
+          >
             Start Free Demo
           </Button>
         </div>
@@ -90,18 +96,21 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
           <div className="pt-2 flex flex-col gap-3">
-            <a
-              href="#signin"
+            <Link
+              to="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="text-center text-sm font-semibold py-2.5 text-[#0f172a] border border-[#e2e8f0] rounded-full"
+              className="text-center text-sm font-semibold py-2.5 text-[#0f172a] border border-[#e2e8f0] rounded-full hover:bg-slate-50 transition-colors"
             >
               Sign In
-            </a>
+            </Link>
             <Button
               variant="primary"
               size="md"
               className="w-full text-center"
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate('/dashboard');
+              }}
             >
               Start Free Demo
             </Button>

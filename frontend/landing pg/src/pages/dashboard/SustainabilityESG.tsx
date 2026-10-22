@@ -23,6 +23,43 @@ interface SustainabilityESGProps {
 export const SustainabilityESG: React.FC<SustainabilityESGProps> = ({ materials }) => {
   const totalSavings = materials.reduce((acc, curr) => acc + curr.carbonSavingsKg, 0);
 
+  const handleExportESGReport = () => {
+    const report = {
+      standard: "ISO 14040/14044 Life Cycle Assessment (LCA) Scope 1-3 Audit Report",
+      protocol: "GHG Protocol Corporate Standard",
+      totalCarbonSavedKg: totalSavings,
+      totalBatchesAudited: materials.length,
+      recyclableBatches: materials.filter(m => m.recyclabilityGrade.startsWith('A')).length,
+      scopeCategories: {
+        scope1_DirectEmissionsReduction: "-18.4%",
+        scope2_IndirectElectricitySavings: "-24.1%",
+        scope3_SupplyChainFoundryOffset: `${(totalSavings / 1000).toFixed(1)} Metric Tons CO2e`
+      },
+      auditDate: new Date().toISOString(),
+      governanceBoard: "European Sustainable Material Consortium"
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ESG_Audit_Report_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadCarbonCSV = () => {
+    const headers = ['Month', 'Actual_Carbon_Savings_Tons', 'Target_Carbon_Savings_Tons'];
+    const rows = MOCK_CHART_CARBON_TREND.map(r => [r.month, r.savings, r.target]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Carbon_Offset_Trend_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header */}
@@ -40,8 +77,8 @@ export const SustainabilityESG: React.FC<SustainabilityESGProps> = ({ materials 
         </div>
 
         <button
-          onClick={() => alert('Generating official ESG Scope 1-3 Compliance Audit Report PDF...')}
-          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-sm shrink-0"
+          onClick={handleExportESGReport}
+          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-sm shrink-0 cursor-pointer"
         >
           <Download className="w-4 h-4" />
           Export ESG Audit Report
@@ -71,7 +108,7 @@ export const SustainabilityESG: React.FC<SustainabilityESGProps> = ({ materials 
           subtitle="Cumulative greenhouse gas reductions across aerospace alloy and bio-polymer R&D batches."
           badgeText="Scope 3 Target Met"
           actionButtonText="Download CSV"
-          onAction={() => alert('Exporting monthly carbon offset CSV...')}
+          onAction={handleDownloadCarbonCSV}
           className="lg:col-span-2"
         >
           <div className="h-64 w-full pt-4">

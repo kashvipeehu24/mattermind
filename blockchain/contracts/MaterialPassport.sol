@@ -71,11 +71,12 @@ contract MaterialPassport is AccessControl {
     );
 
     constructor(address admin) {
-    _grantRole(DEFAULT_ADMIN_ROLE, admin);
-    _grantRole(MANUFACTURER_ROLE, admin);
-    _grantRole(INSPECTOR_ROLE, admin);
-    _grantRole(WAREHOUSE_ROLE, admin);
-    _grantRole(RECYCLER_ROLE, admin);
+        require(admin != address(0), "Invalid admin address");
+        _grantRole(DEFAULT_ADMIN_ROLE, admin);
+        _grantRole(MANUFACTURER_ROLE, admin);
+        _grantRole(INSPECTOR_ROLE, admin);
+        _grantRole(WAREHOUSE_ROLE, admin);
+        _grantRole(RECYCLER_ROLE, admin);
     }
 
     function registerMaterial(
@@ -87,11 +88,13 @@ contract MaterialPassport is AccessControl {
         string memory _metadataURI,
         address _owner
     ) public onlyRole(MANUFACTURER_ROLE) {
-
-        require(
-            !materials[_materialId].exists,
-            "Material already exists"
-        );
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(bytes(_materialName).length > 0, "Material name cannot be empty");
+        require(bytes(_category).length > 0, "Category cannot be empty");
+        require(bytes(_manufacturer).length > 0, "Manufacturer cannot be empty");
+        require(_manufactureDate > 0, "Invalid manufacture date");
+        require(_owner != address(0), "Invalid owner address");
+        require(!materials[_materialId].exists, "Material already exists");
 
         materials[_materialId] = Material({
             materialId: _materialId,
@@ -105,138 +108,132 @@ contract MaterialPassport is AccessControl {
             exists: true
         });
 
+        materialHistory[_materialId].push(
+            LifecycleEvent({
+                timestamp: block.timestamp,
+                eventType: "Material Registered",
+                description: "Material batch registered in passport registry",
+                performedBy: msg.sender
+            })
+        );
+
         emit MaterialRegistered(_materialId, _owner);
+        emit LifecycleEventAdded(_materialId, "Material Registered", msg.sender);
     }
 
     function addLifecycleEvent(
-    string memory _materialId,
-    string memory _eventType,
-    string memory _description
+        string memory _materialId,
+        string memory _eventType,
+        string memory _description
     ) public onlyRole(INSPECTOR_ROLE) {
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(materials[_materialId].exists, "Material not found");
+        require(bytes(_eventType).length > 0, "Event type cannot be empty");
+        require(bytes(_description).length > 0, "Description cannot be empty");
 
-    require(
-        materials[_materialId].exists,
-        "Material not found"
-    );
+        materialHistory[_materialId].push(
+            LifecycleEvent({
+                timestamp: block.timestamp,
+                eventType: _eventType,
+                description: _description,
+                performedBy: msg.sender
+            })
+        );
 
-    materialHistory[_materialId].push(
-        LifecycleEvent({
-            timestamp: block.timestamp,
-            eventType: _eventType,
-            description: _description,
-            performedBy: msg.sender
-        })
-    );
-
-    emit LifecycleEventAdded(
-        _materialId,
-        _eventType,
-        msg.sender
-    );
+        emit LifecycleEventAdded(
+            _materialId,
+            _eventType,
+            msg.sender
+        );
     }
 
     function transferMaterialOwnership(
-    string memory _materialId,
-    address _newOwner
+        string memory _materialId,
+        address _newOwner
     ) public onlyRole(WAREHOUSE_ROLE) {
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(materials[_materialId].exists, "Material not found");
+        require(_newOwner != address(0), "Invalid owner address");
+        require(_newOwner != materials[_materialId].currentOwner, "Already current owner");
 
-    require(
-        materials[_materialId].exists,
-        "Material not found"
-    );
+        address previousOwner = materials[_materialId].currentOwner;
+        materials[_materialId].currentOwner = _newOwner;
 
-    require(
-        _newOwner != address(0),
-        "Invalid owner address"
-    );
+        materialHistory[_materialId].push(
+            LifecycleEvent({
+                timestamp: block.timestamp,
+                eventType: "Ownership Transfer",
+                description: "Material ownership transferred",
+                performedBy: msg.sender
+            })
+        );
 
-    address previousOwner = materials[_materialId].currentOwner;
-
-    materials[_materialId].currentOwner = _newOwner;
-
-    materialHistory[_materialId].push(
-        LifecycleEvent({
-            timestamp: block.timestamp,
-            eventType: "Ownership Transfer",
-            description: "Material ownership transferred",
-            performedBy: msg.sender
-        })
-    );
-
-    emit OwnershipTransferred(
-        _materialId,
-        previousOwner,
-        _newOwner
-    );
+        emit OwnershipTransferred(
+            _materialId,
+            previousOwner,
+            _newOwner
+        );
     }
 
     function updateMaterialStatus(
-    string memory _materialId,
-    MaterialStatus _newStatus
-)
-    public
-    onlyRole(INSPECTOR_ROLE)
-{
-    require(
-        materials[_materialId].exists,
-        "Material not found"
-    );
+        string memory _materialId,
+        MaterialStatus _newStatus
+    ) public {
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(materials[_materialId].exists, "Material not found");
+        require(materials[_materialId].status != _newStatus, "Status already set");
 
-    materials[_materialId].status = _newStatus;
+        if (_newStatus == MaterialStatus.Recycled || _newStatus == MaterialStatus.Disposed) {
+            require(
+                hasRole(INSPECTOR_ROLE, msg.sender) || hasRole(RECYCLER_ROLE, msg.sender),
+                "Caller lacks INSPECTOR_ROLE or RECYCLER_ROLE"
+            );
+        } else {
+            require(
+                hasRole(INSPECTOR_ROLE, msg.sender),
+                "Caller lacks INSPECTOR_ROLE"
+            );
+        }
 
-    materialHistory[_materialId].push(
-        LifecycleEvent({
-            timestamp: block.timestamp,
-            eventType: "Status Update",
-            description: "Material status updated",
-            performedBy: msg.sender
-        })
-    );
+        materials[_materialId].status = _newStatus;
 
-    emit MaterialStatusUpdated(
-        _materialId,
-        _newStatus
-    );
+        materialHistory[_materialId].push(
+            LifecycleEvent({
+                timestamp: block.timestamp,
+                eventType: "Status Update",
+                description: "Material status updated",
+                performedBy: msg.sender
+            })
+        );
+
+        emit MaterialStatusUpdated(
+            _materialId,
+            _newStatus
+        );
     }
 
     function getMaterial(
         string memory _materialId
-    )
-        public
-        view
-        returns (Material memory)
-    {
-        require(
-            materials[_materialId].exists,
-            "Material not found"
-        );
-
+    ) public view returns (Material memory) {
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(materials[_materialId].exists, "Material not found");
         return materials[_materialId];
     }
 
     function verifyMaterial(
         string memory _materialId
-    )
-        public
-        view
-        returns (bool)
-    {
+    ) public view returns (bool) {
+        if (bytes(_materialId).length == 0) {
+            return false;
+        }
         return materials[_materialId].exists;
     }
 
     function getMaterialHistory(
-    string memory _materialId
-    )
-    public
-    view
-    returns (LifecycleEvent[] memory)
-    {
-    require(
-        materials[_materialId].exists,
-        "Material not found"
-    );
-
-    return materialHistory[_materialId];
+        string memory _materialId
+    ) public view returns (LifecycleEvent[] memory) {
+        require(bytes(_materialId).length > 0, "Material ID cannot be empty");
+        require(materials[_materialId].exists, "Material not found");
+        return materialHistory[_materialId];
     }
-
 }

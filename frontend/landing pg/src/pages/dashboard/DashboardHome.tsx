@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { ChartCard } from '../../components/dashboard/ChartCard';
 import { MaterialTable } from '../../components/dashboard/MaterialTable';
@@ -46,12 +47,17 @@ import {
 interface DashboardHomeProps {
   materials: MaterialItem[];
   onSelectMaterial: (m: MaterialItem) => void;
+  dataSource?: 'live' | 'demo' | 'empty';
+  apiError?: string | null;
 }
 
 export const DashboardHome: React.FC<DashboardHomeProps> = ({
   materials,
-  onSelectMaterial
+  onSelectMaterial,
+  dataSource = 'demo',
+  apiError = null,
 }) => {
+  const navigate = useNavigate();
   const [alerts, setAlerts] = useState<AIAlert[]>(MOCK_ALERTS);
 
   const handleResolveAlert = (id: string) => {
@@ -61,19 +67,53 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
   };
 
   // Aggregate Metrics for KPIs
-  const avgRUL = (
-    materials.reduce((acc, curr) => acc + curr.remainingUsefulLifeYears, 0) / materials.length
-  ).toFixed(1);
+  const avgRUL = materials.length > 0
+    ? (materials.reduce((acc, curr) => acc + curr.remainingUsefulLifeYears, 0) / materials.length).toFixed(1)
+    : '12.0';
 
-  const avgCompatibility = Math.round(
-    materials.reduce((acc, curr) => acc + curr.compatibilityScore, 0) / materials.length
-  );
+  const avgCompatibility = materials.length > 0
+    ? Math.round(materials.reduce((acc, curr) => acc + curr.compatibilityScore, 0) / materials.length)
+    : 92;
 
   const totalCarbonSavings = materials.reduce((acc, curr) => acc + curr.carbonSavingsKg, 0);
   const activePassportsCount = materials.filter(
     (m) => m.passportStatus === 'compliant' || m.passportStatus === 'certified'
   ).length;
   const verifiedLedgerCount = materials.filter((m) => m.blockchainVerified).length;
+
+  const handleExportLifecycleCSV = () => {
+    const headers = ['Cycle,Ti64,Inconel,HEA,UHTC'];
+    const rows = MOCK_CHART_DEGRADATION.map((d) => `${d.cycle},${d.ti64},${d.inconel},${d.hea},${d.uhtc}`);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers, ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `mattermind-lifecycle-stress-trend-${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportESGAudit = () => {
+    const report = {
+      platform: 'MatterMind Material Intelligence',
+      standard: 'ISO 14040 / EU Ecodesign DPP 2026',
+      generatedAt: new Date().toISOString(),
+      materialsAudited: materials.length,
+      totalEmbodiedCarbonSavingsKg: totalCarbonSavings,
+      esgTrendData: MOCK_CHART_CARBON_TREND,
+      complianceStatus: 'VERIFIED'
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mattermind-esg-audit-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -103,8 +143,22 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
               <span className="text-lg font-black text-emerald-400 font-mono">1,482</span>
             </div>
             <div className="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-right">
-              <span className="text-[10px] font-bold uppercase text-slate-400 block">Ledger Sync Status</span>
-              <span className="text-lg font-black text-secondary font-mono">100% Synced</span>
+              <span className="text-[10px] font-bold uppercase text-slate-400 block">
+                {dataSource === 'live' ? 'Backend Database' : 'Workspace Mode'}
+              </span>
+              <span className={`text-lg font-black font-mono ${
+                dataSource === 'live'
+                  ? 'text-emerald-400'
+                  : apiError
+                    ? 'text-rose-400'
+                    : 'text-amber-400'
+              }`}>
+                {dataSource === 'live'
+                  ? 'Live Synced'
+                  : apiError
+                    ? 'Sync Error'
+                    : 'Demo Baseline'}
+              </span>
             </div>
           </div>
         </div>
@@ -190,7 +244,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             subtitle="Predictive lattice degradation rate across 10,000 thermal-mechanical stress cycles."
             badgeText="Neural Prognosis Engine"
             actionButtonText="Export Data"
-            onAction={() => alert('Exporting lifecycle trend CSV...')}
+            onAction={handleExportLifecycleCSV}
           >
             <div className="h-64 w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
@@ -289,7 +343,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             subtitle="Monthly greenhouse gas reductions and carbon offset metrics vs enterprise targets."
             badgeText="Scope 1-3 ISO 14040"
             actionButtonText="ESG Audit"
-            onAction={() => alert('Generating ESG Audit Certificate PDF...')}
+            onAction={handleExportESGAudit}
           >
             <div className="h-64 w-full pt-4">
               <ResponsiveContainer width="100%" height="100%">
@@ -386,8 +440,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
             </div>
 
             <button
-              onClick={() => (window.location.hash = '#/alerts')}
-              className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+              onClick={() => navigate('/alerts')}
+              className="w-full py-2 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-lg border border-slate-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
             >
               Open Incident Command Hub
               <ArrowRight className="w-3.5 h-3.5" />

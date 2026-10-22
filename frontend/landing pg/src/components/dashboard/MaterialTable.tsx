@@ -71,6 +71,45 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
     currentPage * itemsPerPage
   );
 
+  const handleExportCSV = () => {
+    const headers = [
+      'Material Code',
+      'Material Name',
+      'Category',
+      'Health Index',
+      'Remaining Useful Life (Yrs)',
+      'Compatibility Score',
+      'Passport Status',
+      'Passport ID',
+      'Blockchain Block Hash',
+      'Supplier',
+      'Batch No',
+      'Location'
+    ];
+    const rows = sortedMaterials.map((m) => [
+      `"${m.code}"`,
+      `"${m.name.replace(/"/g, '""')}"`,
+      `"${m.category}"`,
+      m.healthIndex,
+      m.remainingUsefulLifeYears,
+      m.compatibilityScore,
+      `"${m.passportStatus}"`,
+      `"${m.passportId}"`,
+      `"${m.blockchainHash}"`,
+      `"${m.supplier.replace(/"/g, '""')}"`,
+      `"${m.batchNo}"`,
+      `"${m.location}"`
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MatterMind_Material_Catalog_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="p-5 bg-white border border-slate-200 rounded-xl shadow-2xs space-y-4">
       {/* Table Header Controls */}
@@ -96,8 +135,8 @@ export const MaterialTable: React.FC<MaterialTableProps> = ({
           </div>
 
           <button
-            onClick={() => alert('Exporting material catalog report in CSV/ISO 14040 format...')}
-            className="h-9 px-3 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5 transition-colors"
+            onClick={handleExportCSV}
+            className="h-9 px-3 border border-slate-200 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold text-slate-700 inline-flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
             Export Audit CSV

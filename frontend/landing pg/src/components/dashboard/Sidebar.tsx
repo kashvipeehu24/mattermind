@@ -13,7 +13,8 @@ import {
   Layers,
   Sparkles,
   Cpu,
-  Bot
+  Bot,
+  Settings
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,13 +33,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile
 }) => {
   const navItems = [
-    { path: '/', label: 'Dashboard Home', icon: LayoutDashboard },
-    { path: '/materials', label: 'Material Catalog & Passports', icon: Database, badge: '8 Batch' },
+    { path: '/dashboard', label: 'Dashboard Home', icon: LayoutDashboard },
+    { path: '/materials', label: 'Material Catalog & Passports', icon: Database, badge: 'Active' },
     { path: '/analytics', label: 'Predictive Useful Life (RUL)', icon: LineChart },
     { path: '/compatibility', label: 'Compatibility Matrix', icon: Grid2x2Check },
     { path: '/provenance', label: 'Blockchain Provenance', icon: ShieldCheck, badge: 'Immutable' },
     { path: '/sustainability', label: 'Sustainability & Carbon', icon: Leaf, badge: '-18.4% CO₂' },
     { path: '/alerts', label: 'AI Alerts Center', icon: BellRing, alertCount: unresolvedAlertCount },
+    { path: '/settings', label: 'Platform Settings', icon: Settings },
   ];
 
   const content = (
